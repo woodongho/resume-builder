@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gemini AI 기반 이력서 및 포트폴리오 맞춤형 자동 생성 빌더">
+    <title>AI Resume & Portfolio Builder</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
+                <h1>AI Resume & Portfolio Builder</h1>
+            </div>
+            <p class="subtitle">몇 가지 핵심 정보만 입력하면 Gemini AI가 매력적인 이력서와 포트폴리오 초안을 생성해 줍니다.</p>
+        </header>
+
+        <!-- Main Grid Layout -->
+        <main class="main-content">
+            <!-- Left Panel: Input Form -->
+            <section class="form-card">
+                <h2 class="card-title"><i class="fa-solid fa-pen-to-square"></i> 정보 입력</h2>
+                
+                <!-- Error Alert Box -->
+                <div id="errorMessage" class="alert-box alert-danger hidden" role="alert">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span id="errorText">모든 필수 항목을 작성해 주세요.</span>
+                </div>
+
+                <form id="resumeForm" novalidate>
+                    <!-- Name -->
+                    <div class="form-group">
+                        <label for="name">이름 <span class="required">*</span></label>
+                        <input type="text" id="name" name="name" class="form-control" placeholder="예: 홍길동" required>
+                    </div>
+
+                    <!-- Job Title -->
+                    <div class="form-group">
+                        <label for="job_title">지원 직무 <span class="required">*</span></label>
+                        <input type="text" id="job_title" name="job_title" class="form-control" placeholder="예: 백엔드 개발자, 프론트엔드 개발자" required>
+                    </div>
+
+                    <!-- Experience -->
+                    <div class="form-group">
+                        <label for="experience">주요 경력 요약 <span class="required">*</span></label>
+                        <textarea id="experience" name="experience" class="form-control" rows="3" placeholder="예: ABC 테크 웹개발팀 2년 근무 / Python REST API 개발 및 DB 설계 담당" required></textarea>
+                    </div>
+
+                    <!-- Projects -->
+                    <div class="form-group">
+                        <label for="projects">수행 프로젝트 <span class="required">*</span></label>
+                        <textarea id="projects" name="projects" class="form-control" rows="4" placeholder="예: 1. 쇼핑몰 웹 서비스 구축 (Flask, PostgreSQL 사용)&#10;2. 실시간 채팅 서비스 개발 (WebSocket 기반)" required></textarea>
+                    </div>
+
+                    <!-- Tone Selection -->
+                    <div class="form-group">
+                        <label for="tone">원하는 Tone (어조) <span class="required">*</span></label>
+                        <select id="tone" name="tone" class="form-control" required>
+                            <option value="전문적이고 신뢰감을 주는 어조">전문적이고 신뢰감을 주는 어조 (추천)</option>
+                            <option value="열정적이고 진취적인 어조">열정적이고 진취적인 어조</option>
+                            <option value="논리적이고 분석적인 어조">논리적이고 분석적인 어조</option>
+                            <option value="친근하고 협력적인 어조">친근하고 협력적인 어조</option>
+                        </select>
+                    </div>
+
+                    <!-- Prompt Strategy Selection -->
+                    <div class="form-group">
+                        <label>AI 생성 모드 (Prompt 옵션) <span class="required">*</span></label>
+                        <div class="radio-group">
+                            <label class="radio-card">
+                                <input type="radio" name="prompt_type" value="A" checked>
+                                <div class="radio-content">
+                                    <span class="radio-title"><i class="fa-solid fa-file-lines"></i> Prompt A (일반 모드)</span>
+                                    <span class="radio-desc">명확하고 읽기 쉬운 표준 이력서 & 포트폴리오 구조</span>
+                                </div>
+                            </label>
+                            <label class="radio-card">
+                                <input type="radio" name="prompt_type" value="B">
+                                <div class="radio-content">
+                                    <span class="radio-title"><i class="fa-solid fa-award"></i> Prompt B (전문가 모드)</span>
+                                    <span class="radio-desc">STAR 기법 및 정량적 성과 키워드 중심 강화</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="submitBtn" class="btn btn-primary btn-block">
+                        <i class="fa-solid fa-bolt"></i> AI 이력서 & 포트폴리오 생성하기
+                    </button>
+                </form>
+            </section>
+
+            <!-- Right Panel: Result & Actions -->
+            <section class="result-card">
+                <div class="result-header">
+                    <h2 class="card-title"><i class="fa-solid fa-square-poll-vertical"></i> 생성 결과</h2>
+                    <div class="action-buttons">
+                        <button type="button" id="copyBtn" class="btn btn-secondary" disabled>
+                            <i class="fa-regular fa-copy"></i> 복사하기
+                        </button>
+                        <button type="button" id="downloadBtn" class="btn btn-outline" disabled>
+                            <i class="fa-solid fa-download"></i> .md 다운로드
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingSpinner" class="loading-container hidden">
+                    <div class="spinner"></div>
+                    <p class="loading-text">Gemini AI가 이력서와 포트폴리오 초안을 작성 중입니다...</p>
+                    <p class="loading-subtext">약 5초~10초 정도 소요될 수 있습니다.</p>
+                </div>
+
+                <!-- Empty Placeholder State -->
+                <div id="emptyState" class="empty-container">
+                    <i class="fa-solid fa-file-pen empty-icon"></i>
+                    <p class="empty-title">아직 생성된 이력서가 없습니다.</p>
+                    <p class="empty-desc">왼쪽 폼에 정보를 입력하고 [생성하기] 버튼을 눌러주세요.</p>
+                </div>
+
+                <!-- Output Display Area -->
+                <div id="resultContainer" class="result-body hidden">
+                    <pre id="resultOutput" class="markdown-preview"></pre>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2026 AI Resume & Portfolio Builder. Built with Flask & Gemini API.</p>
+        </footer>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
