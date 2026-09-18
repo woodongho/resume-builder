@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AI Resume & Portfolio Builder - Style Sheet
+   AI Resume & Portfolio Builder - Comprehensive Style Sheet
    ========================================================================== */
 
 /* 1. 디자인 시스템 토큰 (CSS 변수) */
@@ -7,6 +7,7 @@
     --primary-color: #4f46e5;
     --primary-hover: #4338ca;
     --primary-light: #eef2ff;
+    --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
     --secondary-color: #0ea5e9;
     --secondary-hover: #0284c7;
     --dark-bg: #0f172a;
@@ -19,13 +20,14 @@
     --danger-color: #ef4444;
     --danger-light: #fef2f2;
     --success-color: #10b981;
+    --success-light: #ecfdf5;
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 25px -5px rgba(79, 70, 229, 0.15);
-    --transition: all 0.25s ease-in-out;
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 10px 25px -5px rgba(79, 70, 229, 0.12);
+    --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 2. 리셋 및 기본 설정 */
@@ -36,32 +38,169 @@
 }
 
 body {
-    font-family: 'Inter', 'Noto Sans KR', sans-serif;
+    font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: #f8fafc;
     color: var(--text-primary);
     line-height: 1.6;
     padding: 24px 16px;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* 3. 메인 앱 컨테이너 */
-.app-container {
-    max-width: 1200px;
-    margin: 0 auto;
+/* ---------------------------------------------------------
+   수업용 4자리 PIN 게이트키퍼 모달
+   --------------------------------------------------------- */
+body.is-locked {
+    overflow: hidden;
 }
 
-/* 4. 헤더 레이아웃 */
-.app-header {
+body.is-locked .app-container {
+    filter: blur(8px);
+    pointer-events: none;
+    user-select: none;
+}
+
+.pin-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.82);
+    backdrop-filter: blur(10px);
+}
+
+.pin-gate[hidden] {
+    display: none !important;
+}
+
+.pin-gate-card {
+    width: 100%;
+    max-width: 440px;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 36px 32px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
     text-align: center;
-    margin-bottom: 32px;
+    border: 1px solid var(--border-color);
+    animation: modalPop 0.25s ease-out;
+}
+
+@keyframes modalPop {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.pin-gate-kicker {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--primary-color);
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+}
+
+.pin-gate-card h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.pin-gate-help {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+.pin-boxes {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 18px;
+}
+
+.pin-digit {
+    width: 58px;
+    height: 68px;
+    text-align: center;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background: #f8fafc;
+    transition: var(--transition);
+}
+
+.pin-digit:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+}
+
+.pin-gate-error {
+    min-height: 24px;
+    font-size: 0.85rem;
+    color: var(--danger-color);
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.pin-gate-submit {
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.pin-gate-submit:hover {
+    opacity: 0.94;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+}
+
+.pin-gate-credit {
+    margin-top: 20px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------
+   3. 메인 앱 컨테이너 & 헤더
+   --------------------------------------------------------- */
+.app-container {
+    max-width: 1240px;
+    margin: 0 auto;
+    transition: filter 0.3s ease;
+}
+
+.app-header {
+    margin-bottom: 24px;
+}
+
+.header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 8px;
 }
 
 .logo {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 12px;
-    margin-bottom: 8px;
 }
 
 .logo-icon {
@@ -70,36 +209,138 @@ body {
 }
 
 .app-header h1 {
-    font-size: 2.2rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    font-size: 1.85rem;
+    font-weight: 800;
+    background: var(--primary-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    letter-spacing: -0.02em;
+}
+
+.status-badge-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.model-badge {
+    background: rgba(14, 165, 233, 0.12);
+    color: var(--secondary-color);
+    border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.edu-badge {
+    background: rgba(79, 70, 229, 0.12);
+    color: var(--primary-color);
+    border: 1px solid rgba(79, 70, 229, 0.3);
 }
 
 .subtitle {
-    font-size: 1rem;
+    font-size: 0.98rem;
     color: var(--text-secondary);
 }
 
-/* 5. 메인 그리드 레이아웃 (좌: 입력 폼, 우: 결과 화면) */
+/* ---------------------------------------------------------
+   4. 빠른 예시 프리셋 섹션
+   --------------------------------------------------------- */
+.preset-section {
+    margin-bottom: 24px;
+}
+
+.preset-container {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 18px;
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.preset-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.preset-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip-btn {
+    background: #f1f5f9;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: var(--transition);
+}
+
+.chip-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--border-focus);
+    transform: translateY(-1px);
+}
+
+.chip-btn.reset-btn {
+    background: #fff1f2;
+    color: #e11d48;
+    border-color: #fecdd3;
+    margin-left: auto;
+}
+
+.chip-btn.reset-btn:hover {
+    background: #ffe4e6;
+    border-color: #fda4af;
+}
+
+/* ---------------------------------------------------------
+   5. 메인 그리드 레이아웃
+   --------------------------------------------------------- */
 .main-content {
     display: grid;
     grid-template-columns: 1fr;
     gap: 24px;
+    align-items: start;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 960px) {
     .main-content {
         grid-template-columns: 1fr 1fr;
     }
 }
 
-/* 6. 카드 공통 스타일 */
+/* ---------------------------------------------------------
+   6. 카드 공통 스타일
+   --------------------------------------------------------- */
 .form-card, .result-card {
     background: var(--card-bg);
     border-radius: var(--radius-lg);
-    padding: 28px;
+    padding: 26px;
     box-shadow: var(--shadow-md);
     border: 1px solid var(--border-color);
     display: flex;
@@ -108,9 +349,8 @@ body {
 
 .card-title {
     font-size: 1.25rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -120,28 +360,9 @@ body {
     color: var(--primary-color);
 }
 
-/* 7. 경고 alert 상자 */
-.alert-box {
-    padding: 12px 16px;
-    border-radius: var(--radius-sm);
-    font-size: 0.9rem;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.alert-danger {
-    background-color: var(--danger-light);
-    color: var(--danger-color);
-    border: 1px solid #fca5a5;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* 8. 폼 컨트롤 스타일 */
+/* ---------------------------------------------------------
+   7. 폼 요소 스타일
+   --------------------------------------------------------- */
 .form-group {
     margin-bottom: 20px;
 }
@@ -151,7 +372,7 @@ body {
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .required {
@@ -160,8 +381,8 @@ body {
 
 .form-control {
     width: 100%;
-    padding: 10px 14px;
-    font-size: 0.95rem;
+    padding: 11px 14px;
+    font-size: 0.92rem;
     font-family: inherit;
     color: var(--text-primary);
     background-color: #ffffff;
@@ -172,141 +393,213 @@ body {
 
 .form-control:focus {
     outline: none;
-    border-color: var(--border-focus);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 
 textarea.form-control {
     resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
 }
 
-/* 9. 라디오 버튼 카드 그리드 */
+/* ---------------------------------------------------------
+   8. 라디오 카드 (Prompt 3.0 옵션)
+   --------------------------------------------------------- */
 .radio-group {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
 }
 
 .radio-card {
     display: flex;
     align-items: flex-start;
-    padding: 12px 16px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
     cursor: pointer;
     transition: var(--transition);
-    background-color: #fafafa;
+    background-color: #ffffff;
 }
 
 .radio-card:hover {
-    border-color: var(--primary-color);
-    background-color: var(--primary-light);
+    border-color: var(--border-focus);
+    background-color: #faf5ff;
 }
 
 .radio-card input[type="radio"] {
     margin-top: 4px;
     margin-right: 12px;
     accent-color: var(--primary-color);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.radio-card input[type="radio"]:checked ~ .radio-content .radio-title {
+    color: var(--primary-color);
+}
+
+.radio-card:has(input[type="radio"]:checked) {
+    border-color: var(--primary-color);
+    background-color: var(--primary-light);
 }
 
 .radio-content {
     display: flex;
     flex-direction: column;
+    gap: 3px;
 }
 
 .radio-title {
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: 0.92rem;
+    font-weight: 700;
     color: var(--text-primary);
 }
 
 .radio-desc {
     font-size: 0.8rem;
     color: var(--text-secondary);
-    margin-top: 2px;
+    line-height: 1.4;
 }
 
-/* 10. 버튼 스타일 */
+/* ---------------------------------------------------------
+   9. 버튼 컴포넌트
+   --------------------------------------------------------- */
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 20px;
-    font-size: 0.95rem;
+    padding: 10px 18px;
+    font-size: 0.9rem;
     font-weight: 600;
     border-radius: var(--radius-sm);
-    border: none;
     cursor: pointer;
+    border: 1px solid transparent;
     transition: var(--transition);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
-    color: #ffffff;
-    box-shadow: var(--shadow-sm);
-}
-
-.btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-lg);
-}
-
-.btn-secondary {
-    background-color: var(--primary-light);
-    color: var(--primary-color);
-}
-
-.btn-secondary:hover:not(:disabled) {
-    background-color: #e0e7ff;
-}
-
-.btn-outline {
-    background-color: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-}
-
-.btn-outline:hover:not(:disabled) {
-    background-color: #f1f5f9;
-}
-
-.btn-block {
-    width: 100%;
+    font-family: inherit;
 }
 
 .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
-/* 11. 결과 헤더 & 액션 버튼 */
+.btn-primary {
+    background: var(--primary-gradient);
+    color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+    opacity: 0.94;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+    background-color: #f1f5f9;
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #e2e8f0;
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline:hover:not(:disabled) {
+    background-color: var(--primary-light);
+}
+
+.btn-block {
+    width: 100%;
+    padding: 13px;
+    font-size: 1rem;
+    margin-top: 8px;
+}
+
+/* ---------------------------------------------------------
+   10. 결과 패널 헤더 & 뷰 모드 탭
+   --------------------------------------------------------- */
 .result-header {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.result-title-area {
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     flex-wrap: wrap;
     gap: 12px;
-    margin-bottom: 20px;
+}
+
+.view-mode-tabs {
+    display: inline-flex;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 10px;
+    gap: 4px;
+}
+
+.tab-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: var(--transition);
+}
+
+.tab-btn.active {
+    background: #ffffff;
+    color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.tab-btn:hover:not(.active) {
+    color: var(--text-primary);
 }
 
 .action-buttons {
     display: flex;
     gap: 8px;
+    justify-content: flex-end;
 }
 
-/* 12. 비어있는 상태 (Empty state) */
+/* ---------------------------------------------------------
+   11. 상태별 컨테이너 (로딩, 빈 화면, 결과)
+   --------------------------------------------------------- */
 .empty-container {
-    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
+    padding: 60px 20px;
     text-align: center;
     border: 2px dashed var(--border-color);
     border-radius: var(--radius-md);
-    background-color: #f8fafc;
+    background-color: #fafbfc;
+    min-height: 420px;
 }
 
 .empty-icon {
@@ -316,36 +609,36 @@ textarea.form-control {
 }
 
 .empty-title {
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: 1.05rem;
+    font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .empty-desc {
     font-size: 0.85rem;
     color: var(--text-secondary);
+    max-width: 320px;
 }
 
-/* 13. 로딩 스피너 애니메이션 */
 .loading-container {
-    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 60px 20px;
+    padding: 80px 20px;
     text-align: center;
+    min-height: 420px;
 }
 
 .spinner {
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     border: 4px solid var(--primary-light);
     border-top-color: var(--primary-color);
     border-radius: 50%;
-    animation: spin 1s infinite linear;
-    margin-bottom: 16px;
+    animation: spin 0.9s infinite linear;
+    margin-bottom: 18px;
 }
 
 @keyframes spin {
@@ -355,40 +648,312 @@ textarea.form-control {
 
 .loading-text {
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
 }
 
 .loading-subtext {
     font-size: 0.85rem;
     color: var(--text-secondary);
-    margin-top: 4px;
+    margin-top: 6px;
 }
 
-/* 14. 결과 출력 마크다운 뷰어 */
+.alert-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    margin-bottom: 18px;
+}
+
+.alert-danger {
+    background-color: var(--danger-light);
+    color: var(--danger-color);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ---------------------------------------------------------
+   12. 결과 출력 영역 (Marked.js HTML & Raw Markdown)
+   --------------------------------------------------------- */
 .result-body {
     flex: 1;
     overflow-y: auto;
-    max-height: 600px;
-    padding: 16px;
-    background-color: #f8fafc;
+    max-height: 720px;
+    padding: 20px;
+    background-color: #ffffff;
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .markdown-preview {
-    font-family: inherit;
-    font-size: 0.95rem;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.9rem;
     white-space: pre-wrap;
     word-break: break-word;
     color: var(--text-primary);
-    line-height: 1.7;
+    line-height: 1.65;
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
 }
 
-/* 15. 푸터 */
+/* ---------------------------------------------------------
+   13. GitHub 스타일 마크다운 본문 스타일링 (.markdown-body)
+   --------------------------------------------------------- */
+.markdown-body {
+    font-size: 0.94rem;
+    line-height: 1.75;
+    color: #1e293b;
+    word-wrap: break-word;
+}
+
+.markdown-body h1 {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #0f172a;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--primary-color);
+    margin-top: 4px;
+    margin-bottom: 18px;
+}
+
+.markdown-body h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-color);
+    margin-top: 24px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.markdown-body h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #334155;
+    margin-top: 18px;
+    margin-bottom: 8px;
+}
+
+.markdown-body p {
+    margin-bottom: 12px;
+}
+
+.markdown-body ul, .markdown-body ol {
+    padding-left: 24px;
+    margin-bottom: 14px;
+}
+
+.markdown-body li {
+    margin-bottom: 6px;
+}
+
+.markdown-body strong {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.markdown-body blockquote {
+    padding: 10px 16px;
+    color: #475569;
+    background-color: #f1f5f9;
+    border-left: 4px solid var(--primary-color);
+    border-radius: 4px;
+    margin: 14px 0;
+}
+
+.markdown-body code {
+    font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+    font-size: 0.85em;
+    padding: 2px 6px;
+    background-color: #f1f5f9;
+    color: #4f46e5;
+    border-radius: 4px;
+}
+
+.markdown-body pre {
+    background-color: #0f172a;
+    color: #f8fafc;
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    overflow-x: auto;
+    margin: 16px 0;
+}
+
+.markdown-body pre code {
+    background-color: transparent;
+    color: inherit;
+    padding: 0;
+}
+
+.markdown-body hr {
+    border: none;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 22px 0;
+}
+
+.markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.88rem;
+}
+
+.markdown-body th, .markdown-body td {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.markdown-body th {
+    background-color: #f8fafc;
+    font-weight: 700;
+}
+
+/* ---------------------------------------------------------
+   14. 푸터
+   --------------------------------------------------------- */
 .app-footer {
     text-align: center;
     margin-top: 40px;
+    padding: 18px 0;
     font-size: 0.85rem;
     color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   15. 모바일 완전 반응형 미디어 쿼리 (Mobile Responsive)
+   ========================================================================== */
+@media (max-width: 768px) {
+    body {
+        padding: 16px 12px;
+    }
+
+    .header-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .app-header h1 {
+        font-size: 1.45rem;
+    }
+
+    .subtitle {
+        font-size: 0.88rem;
+    }
+
+    .preset-container {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 14px;
+        gap: 10px;
+    }
+
+    .preset-chips {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .chip-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 9px 12px;
+        font-size: 0.85rem;
+    }
+
+    .chip-btn.reset-btn {
+        margin-left: 0;
+    }
+
+    .form-card, .result-card {
+        padding: 18px 14px;
+        border-radius: var(--radius-md);
+    }
+
+    .result-header {
+        gap: 12px;
+    }
+
+    .result-title-area {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .view-mode-tabs {
+        width: 100%;
+        display: flex;
+    }
+
+    .tab-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 8px 6px;
+        font-size: 0.78rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .action-buttons .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 11px;
+    }
+
+    .result-body {
+        max-height: 520px;
+        padding: 14px;
+    }
+
+    .markdown-body h1 {
+        font-size: 1.3rem;
+    }
+
+    .markdown-body h2 {
+        font-size: 1.1rem;
+    }
+
+    /* PIN 게이트 모달 모바일 */
+    .pin-gate-card {
+        padding: 26px 18px;
+    }
+
+    .pin-boxes {
+        gap: 8px;
+    }
+
+    .pin-digit {
+        width: 48px;
+        height: 58px;
+        font-size: 1.6rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .app-header h1 {
+        font-size: 1.25rem;
+    }
+
+    .pin-digit {
+        width: 42px;
+        height: 52px;
+        font-size: 1.35rem;
+    }
 }
