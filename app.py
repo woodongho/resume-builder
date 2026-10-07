@@ -2,7 +2,9 @@ import os
 import time
 import hmac
 import hashlib
+import secrets
 import logging
+import threading
 from flask import Flask, render_template, request, jsonify, make_response
 from dotenv import load_dotenv
 from google import genai
@@ -33,9 +35,59 @@ SITE_PASSWORD = os.getenv("SITE_PASSWORD", "").strip()
 if not SITE_PASSWORD:
     logger.warning("SITE_PASSWORD가 설정되어 있지 않습니다. .env 파일에 4자리 비밀번호를 설정하세요.")
 
-SECRET_KEY = os.getenv("SECRET_KEY", "resume-builder-secret-key-prod")
+SECRET_KEY = os.getenv("SECRET_KEY", "").strip()
+if not SECRET_KEY:
+    if __name__ != "__main__":
+        # gunicorn/Vercel 등 배포 실행에서는 프로세스마다 키가 달라지면 안 되므로 기동을 거부합니다.
+        raise RuntimeError("SECRET_KEY 환경변수가 설정되어 있지 않습니다. 긴 임의 문자열을 환경변수로 등록하세요.")
+    SECRET_KEY = secrets.token_hex(32)
+    logger.warning("SECRET_KEY가 설정되어 있지 않아 임시 랜덤 키를 사용합니다. (재시작 시 인증 쿠키가 무효화됩니다)")
 COOKIE_NAME = "class_access"
 COOKIE_MAX_AGE = 86400  # 24시간
+
+
+# PIN 무차별 대입 방지 (인스턴스 메모리 기반 보조 수단)
+# 서버리스에서는 인스턴스별로 분리되므로 Vercel Firewall Rate Limit 과 함께 사용하세요.
+UNLOCK_MAX_FAILS = 5
+UNLOCK_WINDOW_SEC = 15 * 60
+UNLOCK_GLOBAL_MAX_FAILS = 50
+_unlock_fails = {}
+_unlock_global_fails = []
+_unlock_lock = threading.Lock()
+
+
+def _client_ip() -> str:
+    fwd = request.headers.get("X-Forwarded-For", "")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    return request.remote_addr or "unknown"
+
+
+def _unlock_blocked_seconds(ip: str) -> int:
+    global _unlock_global_fails
+    now = time.time()
+    with _unlock_lock:
+        _unlock_global_fails = [t for t in _unlock_global_fails if now - t < UNLOCK_WINDOW_SEC]
+        per_ip = [t for t in _unlock_fails.get(ip, []) if now - t < UNLOCK_WINDOW_SEC]
+        _unlock_fails[ip] = per_ip
+        for ts_list, limit in ((per_ip, UNLOCK_MAX_FAILS), (_unlock_global_fails, UNLOCK_GLOBAL_MAX_FAILS)):
+            if len(ts_list) >= limit:
+                return max(1, int(UNLOCK_WINDOW_SEC - (now - ts_list[0])))
+    return 0
+
+
+def _record_unlock_failure(ip: str) -> None:
+    now = time.time()
+    with _unlock_lock:
+        _unlock_fails.setdefault(ip, []).append(now)
+        _unlock_global_fails.append(now)
+        if len(_unlock_fails) > 5000:
+            _unlock_fails.clear()
+
+
+def _clear_unlock_failures(ip: str) -> None:
+    with _unlock_lock:
+        _unlock_fails.pop(ip, None)
 
 
 def sign_cookie(data: str) -> str:
@@ -99,7 +151,15 @@ def unlock():
             logger.error("[AUTH] SITE_PASSWORD 미설정 상태")
             return jsonify({"success": False, "error": "서버에 비밀번호가 설정되어 있지 않습니다. .env를 확인하세요."}), 500
 
-        if hmac.compare_digest(password, SITE_PASSWORD):
+        client_ip = _client_ip()
+        retry_after = _unlock_blocked_seconds(client_ip)
+        if retry_after:
+            resp = jsonify({"success": False, "error": f"시도 횟수를 초과했습니다. {retry_after}초 후 다시 시도해 주세요."})
+            resp.headers["Retry-After"] = str(retry_after)
+            return resp, 429
+
+        if hmac.compare_digest(password.encode("utf-8"), SITE_PASSWORD.encode("utf-8")):
+            _clear_unlock_failures(client_ip)
             logger.info("[AUTH] 비밀번호 인증 성공")
             now_ts = str(int(time.time()))
             cookie_val = sign_cookie(now_ts)
@@ -111,10 +171,12 @@ def unlock():
                 max_age=COOKIE_MAX_AGE,
                 httponly=True,
                 samesite="Lax",
-                secure=False  # 로컬 및 HTTPS 모두 호환
+                # HTTPS(프록시 뒤 포함)에서는 Secure 쿠키, 로컬 HTTP 개발에서는 일반 쿠키
+                secure=request.is_secure or request.headers.get("X-Forwarded-Proto", "").split(",")[0].strip() == "https"
             )
             return resp
         else:
+            _record_unlock_failure(client_ip)
             logger.warning("[AUTH] 비밀번호 불일치")
             return jsonify({"success": False, "error": "비밀번호가 올바르지 않습니다."}), 403
 
@@ -174,7 +236,8 @@ def generate():
         tone = data.get("tone", "").strip()
         prompt_type = data.get("prompt_type", "A").strip().upper()
 
-        logger.info(f"[/generate] 요청 수신 - 이름: {name}, 직무: {job_title}, 모드: {prompt_type}")
+        # 개인정보 보호: 이름·직무 등 입력 내용은 로그에 남기지 않음
+        logger.info(f"[/generate] 요청 수신 - 모드: {prompt_type}, 입력 길이(경력/프로젝트): {len(experience)}/{len(projects)}")
 
         # 필수 입력값 체크
         if not name or not job_title or not experience or not projects or not tone:
@@ -302,7 +365,7 @@ def generate():
         logger.error(f"[/generate] 처리 중 예외 발생: {str(e)}", exc_info=True)
         return jsonify({
             "success": False,
-            "error": f"AI 초안 생성 중 오류가 발생했습니다: {str(e)}"
+            "error": "AI 초안 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
         }), 500
 
 

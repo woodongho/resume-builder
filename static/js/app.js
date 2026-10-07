@@ -276,8 +276,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---------------------------------------------------------
     function renderResult(markdownText) {
         // 1) Marked.js HTML 렌더링
-        if (window.marked && typeof window.marked.parse === 'function') {
-            markdownRendered.innerHTML = window.marked.parse(markdownText);
+        // marked 변환 결과는 DOMPurify 로 정화 (DOMPurify 가 없으면 이스케이프된 텍스트만 표시)
+        if (window.marked && typeof window.marked.parse === 'function' && window.DOMPurify) {
+            markdownRendered.innerHTML = window.DOMPurify.sanitize(window.marked.parse(markdownText));
         } else {
             markdownRendered.innerHTML = `<pre>${escapeHtml(markdownText)}</pre>`;
         }
